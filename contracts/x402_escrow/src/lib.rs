@@ -71,8 +71,8 @@ impl X402Escrow {
             return Err(EscrowError::AlreadyResolved);
         }
 
-        let computed_hash: Hash<32> = env.crypto().sha256(&preimage.clone().into());
-        let computed_bytesn: BytesN<32> = computed_hash.into();
+        let computed_bytesn: soroban_sdk::BytesN<32> = env.crypto().sha256(&preimage);
+        
 
         if computed_bytesn != escrow.hash_lock {
             return Err(EscrowError::HashMismatch);
@@ -115,3 +115,4 @@ impl X402Escrow {
         Ok(())
     }
 }
+

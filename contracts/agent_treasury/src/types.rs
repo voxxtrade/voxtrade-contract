@@ -1,11 +1,26 @@
-use soroban_sdk::contracttype;
+use soroban_sdk::{contracttype, Address};
 
 #[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
-    Admin,      // Address
-    AgentKey,   // Address
-    DailyLimit, // i128
-    SpentToday, // i128
-    LastReset,  // u64
+    Admin,
+    AgentKey,
+    DailyLimit,
+    SpentToday,
+    LastReset,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Config {
+    pub admin: Address,
+    pub agent_key: Address,
+    pub daily_limit: i128,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DailySpend {
+    pub day: u32,
+    pub amount_spent: i128,
 }
