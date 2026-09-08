@@ -6,10 +6,8 @@ edition = "2021"
 [dependencies]
 soroban-sdk = "20.0.0-rc2"
 
-derive_
-
 [dev-dependencies]
-soroban-sdk = { version = "20.0.0", features = ["testutils"] }
+soroban-sdk = { version = "20.0.0-rc2", features = ["testutils"] }
 agent_treasury = { path = ".", features = ["testutils"] }
 
 [features]
