@@ -71,4 +71,3 @@ fn test_rolling_limit() {
         &agent, &token, &escrow_id, &seller, &50_i128, &hash_lock, &timeout,
     );
 }
-

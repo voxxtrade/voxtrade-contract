@@ -1,7 +1,5 @@
 #![no_std]
-use soroban_sdk::{
-    contract, contractimpl, Address, BytesN, Env, token,
-};
+use soroban_sdk::{contract, contractimpl, token, Address, BytesN, Env};
 
 mod errors;
 #[cfg(test)]
@@ -77,12 +75,12 @@ impl X402Escrow {
         if escrow.resolved {
             return Err(EscrowError::AlreadyResolved);
         }
-        
+
         if env.ledger().sequence() >= escrow.timeout_ledger {
             return Err(EscrowError::TimeoutReached);
         }
 
-        let preimage_bytes: soroban_sdk::Bytes = preimage.clone().into(); 
+        let preimage_bytes: soroban_sdk::Bytes = preimage.clone().into();
         let computed_bytesn: soroban_sdk::BytesN<32> = env.crypto().sha256(&preimage_bytes);
 
         if computed_bytesn != escrow.hash_lock {
@@ -112,7 +110,7 @@ impl X402Escrow {
         if escrow.resolved {
             return Err(EscrowError::AlreadyResolved);
         }
-        
+
         if env.ledger().sequence() < escrow.timeout_ledger {
             return Err(EscrowError::TimeoutNotReached);
         }
@@ -129,4 +127,3 @@ impl X402Escrow {
         Ok(())
     }
 }
-

@@ -13,7 +13,8 @@ use types::{Config, DailySpend};
 #[contract]
 pub struct AgentTreasury;
 
-#[contractimpl] #[allow(clippy::too_many_arguments)]
+#[contractimpl]
+#[allow(clippy::too_many_arguments)]
 impl AgentTreasury {
     pub fn init(
         env: Env,
@@ -88,13 +89,17 @@ impl AgentTreasury {
         env.invoke_contract::<u64>(
             &escrow,
             &Symbol::new(&env, "lock_funds"),
-            soroban_sdk::vec![&env, env.current_contract_address().into_val(&env), seller.into_val(&env), token.into_val(&env), amount.into_val(&env), hash_lock.into_val(&env), timeout_ledger.into_val(&env)],
+            soroban_sdk::vec![
+                &env,
+                env.current_contract_address().into_val(&env),
+                seller.into_val(&env),
+                token.into_val(&env),
+                amount.into_val(&env),
+                hash_lock.into_val(&env),
+                timeout_ledger.into_val(&env)
+            ],
         );
 
         Ok(())
     }
 }
-
-
-
-
