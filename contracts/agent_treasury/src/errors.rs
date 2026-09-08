@@ -9,4 +9,3 @@ pub enum TreasuryError {
     InvalidAmount = 3,
     Unauthorized = 4,
 }
-

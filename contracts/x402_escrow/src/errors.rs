@@ -9,4 +9,3 @@ pub enum EscrowError {
     TimeoutNotReached = 3,
     TimeoutReached = 4,
 }
-

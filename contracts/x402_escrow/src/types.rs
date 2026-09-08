@@ -18,4 +18,3 @@ pub enum DataKey {
     Escrow(u64), // Maps to Escrow struct
     Nonce,       // u64
 }
-

@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, Env, BytesN};
+use soroban_sdk::{testutils::Address as _, Address, BytesN, Env};
 
 #[test]
 fn test_lock_and_claim() {
@@ -11,7 +11,7 @@ fn test_lock_and_claim() {
     let buyer = Address::generate(&env);
     let seller = Address::generate(&env);
     let token = Address::generate(&env);
-    
+
     let escrow_id = env.register_contract(None, X402Escrow);
     let escrow = X402EscrowClient::new(&env, &escrow_id);
 
@@ -33,7 +33,7 @@ fn test_timeout_refund() {
     let buyer = Address::generate(&env);
     let seller = Address::generate(&env);
     let token = Address::generate(&env);
-    
+
     let escrow_id = env.register_contract(None, X402Escrow);
     let escrow = X402EscrowClient::new(&env, &escrow_id);
 
@@ -60,4 +60,3 @@ fn test_timeout_refund() {
 
     escrow.refund(&id);
 }
-

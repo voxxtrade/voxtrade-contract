@@ -6,9 +6,9 @@ pub mod types;
 #[cfg(test)]
 mod test;
 
-use soroban_sdk::{contract, contractimpl, Address, Env, BytesN, Symbol, token, crypto::Hash};
-use crate::types::{DataKey, Escrow};
 use crate::errors::EscrowError;
+use crate::types::{DataKey, Escrow};
+use soroban_sdk::{contract, contractimpl, crypto::Hash, token, Address, BytesN, Env, Symbol};
 
 const TTL_EXTEND: u32 = 535680;
 
@@ -18,13 +18,13 @@ pub struct X402Escrow;
 #[contractimpl]
 impl X402Escrow {
     pub fn lock_funds(
-        env: Env, 
-        buyer: Address, 
-        seller: Address, 
-        token: Address, 
-        amount: i128, 
-        hash_lock: BytesN<32>, 
-        timeout_ledger: u32
+        env: Env,
+        buyer: Address,
+        seller: Address,
+        token: Address,
+        amount: i128,
+        hash_lock: BytesN<32>,
+        timeout_ledger: u32,
     ) -> u64 {
         buyer.require_auth();
 
@@ -52,9 +52,14 @@ impl X402Escrow {
 
         let key = DataKey::Escrow(next_nonce);
         env.storage().persistent().set(&key, &escrow);
-        env.storage().persistent().extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
+        env.storage()
+            .persistent()
+            .extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
 
-        env.events().publish((Symbol::new(&env, "FundsLocked"),), (next_nonce, buyer, seller, amount));
+        env.events().publish(
+            (Symbol::new(&env, "FundsLocked"),),
+            (next_nonce, buyer, seller, amount),
+        );
         next_nonce
     }
 
@@ -77,10 +82,19 @@ impl X402Escrow {
 
         escrow.resolved = true;
         env.storage().persistent().set(&key, &escrow);
-        env.storage().persistent().extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
+        env.storage()
+            .persistent()
+            .extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
 
-        token::Client::new(&env, &escrow.token).transfer(&env.current_contract_address(), &escrow.seller, &escrow.amount);
-        env.events().publish((Symbol::new(&env, "FundsClaimed"),), (escrow_id, escrow.seller));
+        token::Client::new(&env, &escrow.token).transfer(
+            &env.current_contract_address(),
+            &escrow.seller,
+            &escrow.amount,
+        );
+        env.events().publish(
+            (Symbol::new(&env, "FundsClaimed"),),
+            (escrow_id, escrow.seller),
+        );
         Ok(())
     }
 
@@ -98,10 +112,15 @@ impl X402Escrow {
 
         escrow.resolved = true;
         env.storage().persistent().set(&key, &escrow);
-        env.storage().persistent().extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
+        env.storage()
+            .persistent()
+            .extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
 
-        token::Client::new(&env, &escrow.token).transfer(&env.current_contract_address(), &escrow.buyer, &escrow.amount);
+        token::Client::new(&env, &escrow.token).transfer(
+            &env.current_contract_address(),
+            &escrow.buyer,
+            &escrow.amount,
+        );
         Ok(())
     }
 }
-
