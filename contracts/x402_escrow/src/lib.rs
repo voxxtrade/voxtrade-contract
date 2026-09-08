@@ -6,7 +6,7 @@ pub mod types;
 #[cfg(test)]
 mod test;
 
-use soroban_sdk::{contract, contractimpl, Address, Env, BytesN, Symbol, token};
+use soroban_sdk::{contract, contractimpl, Address, Env, BytesN, Symbol, token, crypto::Hash};
 use crate::types::{DataKey, Escrow};
 use crate::errors::EscrowError;
 
@@ -56,6 +56,52 @@ impl X402Escrow {
 
         env.events().publish((Symbol::new(&env, "FundsLocked"),), (next_nonce, buyer, seller, amount));
         next_nonce
+    }
+
+    pub fn claim(env: Env, escrow_id: u64, preimage: BytesN<32>) -> Result<(), EscrowError> {
+        let key = DataKey::Escrow(escrow_id);
+        let mut escrow: Escrow = env.storage().persistent().get(&key).unwrap();
+
+        if escrow.resolved {
+            return Err(EscrowError::AlreadyResolved);
+        }
+
+        if env.ledger().sequence() > escrow.timeout_ledger {
+            return Err(EscrowError::TimeoutReached);
+        }
+
+        let computed_hash = env.crypto().sha256(&preimage);
+        if computed_hash != escrow.hash_lock {
+            return Err(EscrowError::InvalidHash);
+        }
+
+        escrow.resolved = true;
+        env.storage().persistent().set(&key, &escrow);
+        env.storage().persistent().extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
+
+        token::Client::new(&env, &escrow.token).transfer(&env.current_contract_address(), &escrow.seller, &escrow.amount);
+        env.events().publish((Symbol::new(&env, "FundsClaimed"),), (escrow_id, escrow.seller));
+        Ok(())
+    }
+
+    pub fn refund(env: Env, escrow_id: u64) -> Result<(), EscrowError> {
+        let key = DataKey::Escrow(escrow_id);
+        let mut escrow: Escrow = env.storage().persistent().get(&key).unwrap();
+
+        if escrow.resolved {
+            return Err(EscrowError::AlreadyResolved);
+        }
+
+        if env.ledger().sequence() <= escrow.timeout_ledger {
+            return Err(EscrowError::TimeoutNotReached);
+        }
+
+        escrow.resolved = true;
+        env.storage().persistent().set(&key, &escrow);
+        env.storage().persistent().extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
+
+        token::Client::new(&env, &escrow.token).transfer(&env.current_contract_address(), &escrow.buyer, &escrow.amount);
+        Ok(())
     }
 }
 
