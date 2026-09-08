@@ -1,5 +1,7 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, token, Address, BytesN, Env, Symbol};
+use soroban_sdk::{
+    contract, contractimpl, Address, BytesN, Env, token,
+};
 
 mod errors;
 #[cfg(test)]
@@ -34,10 +36,15 @@ impl X402Escrow {
 
         token::Client::new(&env, &token).transfer(&buyer, &env.current_contract_address(), &amount);
 
-        let nonce_key = Symbol::new(&env, "nonce");
-        let mut nonce: u64 = env.storage().instance().get(&nonce_key).unwrap_or(0);
+        let mut nonce: u64 = env
+            .storage()
+            .persistent()
+            .get(&types::DataKey::Nonce)
+            .unwrap_or(0);
         nonce += 1;
-        env.storage().instance().set(&nonce_key, &nonce);
+        env.storage()
+            .persistent()
+            .set(&types::DataKey::Nonce, &nonce);
 
         let escrow = Escrow {
             buyer,
@@ -70,9 +77,13 @@ impl X402Escrow {
         if escrow.resolved {
             return Err(EscrowError::AlreadyResolved);
         }
-
-        let computed_bytesn: soroban_sdk::BytesN<32> = env.crypto().sha256(&preimage);
         
+        if env.ledger().sequence() >= escrow.timeout_ledger {
+            return Err(EscrowError::TimeoutReached);
+        }
+
+        let preimage_bytes: soroban_sdk::Bytes = preimage.clone().into(); 
+        let computed_bytesn: soroban_sdk::BytesN<32> = env.crypto().sha256(&preimage_bytes);
 
         if computed_bytesn != escrow.hash_lock {
             return Err(EscrowError::HashMismatch);
@@ -86,6 +97,7 @@ impl X402Escrow {
             &escrow.seller,
             &escrow.amount,
         );
+
         Ok(())
     }
 
@@ -100,6 +112,7 @@ impl X402Escrow {
         if escrow.resolved {
             return Err(EscrowError::AlreadyResolved);
         }
+        
         if env.ledger().sequence() < escrow.timeout_ledger {
             return Err(EscrowError::TimeoutNotReached);
         }
@@ -112,6 +125,7 @@ impl X402Escrow {
             &escrow.buyer,
             &escrow.amount,
         );
+
         Ok(())
     }
 }

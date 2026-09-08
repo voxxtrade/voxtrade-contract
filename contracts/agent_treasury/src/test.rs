@@ -58,7 +58,7 @@ fn test_rolling_limit() {
     env.ledger().set(soroban_sdk::testutils::LedgerInfo {
         timestamp: 86401,
         protocol_version: 20,
-        sequence_number: 100,
+        sequence_number: 17281,
         network_id: [0; 32],
         base_reserve: 10,
         min_temp_entry_ttl: 1,
@@ -71,3 +71,4 @@ fn test_rolling_limit() {
         &agent, &token, &escrow_id, &seller, &50_i128, &hash_lock, &timeout,
     );
 }
+

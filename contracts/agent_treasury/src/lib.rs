@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(clippy::too_many_arguments)]
 use soroban_sdk::{contract, contractimpl, Address, Env, IntoVal, Symbol};
 
 mod errors;
@@ -12,7 +13,7 @@ use types::{Config, DailySpend};
 #[contract]
 pub struct AgentTreasury;
 
-#[contractimpl]
+#[contractimpl] #[allow(clippy::too_many_arguments)]
 impl AgentTreasury {
     pub fn init(
         env: Env,
@@ -84,20 +85,16 @@ impl AgentTreasury {
             .persistent()
             .extend_ttl(&spend_key, 100_000, 100_000);
 
-        env.invoke_contract::<()>(
+        env.invoke_contract::<u64>(
             &escrow,
             &Symbol::new(&env, "lock_funds"),
-            (
-                env.current_contract_address().into_val(&env),
-                seller.into_val(&env),
-                token.into_val(&env),
-                amount.into_val(&env),
-                hash_lock.into_val(&env),
-                timeout_ledger.into_val(&env),
-            )
-                .into_val(&env),
+            soroban_sdk::vec![&env, env.current_contract_address().into_val(&env), seller.into_val(&env), token.into_val(&env), amount.into_val(&env), hash_lock.into_val(&env), timeout_ledger.into_val(&env)],
         );
 
         Ok(())
     }
 }
+
+
+
+
