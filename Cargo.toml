@@ -3,6 +3,3 @@ members = [
     "contracts/*",
 ]
 
-[patch.crates-io]
-ethnum = { git = "https://github.com/stellar/ethnum-rs.git", rev = "b3c95d8e202be1bf80a4805c8736e65cd2287c29" }
-
