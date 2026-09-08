@@ -16,7 +16,7 @@ fn test_lock_and_claim() {
     let escrow = X402EscrowClient::new(&env, &escrow_id);
 
     let preimage = BytesN::from_array(&env, &[1; 32]);
-    let preimage_bytes: soroban_sdk::Bytes = preimage.clone().into(); let hash_lock_hash = env.crypto().sha256(&preimage_bytes); let hash_lock: BytesN<32> = hash_lock_hash.into();
+    let hash_lock = env.crypto().sha256(&preimage);
     let timeout = 1000;
 
     let id = escrow.lock_funds(&buyer, &seller, &token, &100_i128, &hash_lock, &timeout);
@@ -38,7 +38,7 @@ fn test_timeout_refund() {
     let escrow = X402EscrowClient::new(&env, &escrow_id);
 
     let preimage = BytesN::from_array(&env, &[1; 32]);
-    let preimage_bytes: soroban_sdk::Bytes = preimage.clone().into(); let hash_lock_hash = env.crypto().sha256(&preimage_bytes); let hash_lock: BytesN<32> = hash_lock_hash.into();
+    let hash_lock = env.crypto().sha256(&preimage);
     let timeout = 100;
 
     let id = escrow.lock_funds(&buyer, &seller, &token, &100_i128, &hash_lock, &timeout);
