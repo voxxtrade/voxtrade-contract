@@ -1,7 +1,5 @@
 #![no_std]
-use soroban_sdk::{
-    contract, contractimpl, crypto::Hash, token, Address, Bytes, BytesN, Env, IntoVal, Symbol,
-};
+use soroban_sdk::{contract, contractimpl, token, Address, BytesN, Env, Symbol};
 
 mod errors;
 #[cfg(test)]

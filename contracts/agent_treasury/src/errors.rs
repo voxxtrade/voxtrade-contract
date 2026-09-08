@@ -9,4 +9,5 @@ pub enum TreasuryError {
     InvalidAmount = 3,
     NotFound = 4,
     LimitExceeded = 5,
+    AlreadyInitialized = 6,
 }
