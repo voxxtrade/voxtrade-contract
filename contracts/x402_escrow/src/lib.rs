@@ -1,12 +1,10 @@
 #![no_std]
-use soroban_sdk::{
-    contract, contractimpl, crypto::Hash, token, Address, Bytes, BytesN, Env, IntoVal, Symbol,
-};
+use soroban_sdk::{contract, contractimpl, crypto::Hash, token, Address, Bytes, BytesN, Env, Symbol, IntoVal};
 
 mod errors;
+mod types;
 #[cfg(test)]
 mod test;
-mod types;
 
 use errors::EscrowError;
 use types::Escrow;
@@ -51,30 +49,24 @@ impl X402Escrow {
             resolved: false,
         };
 
-        env.storage()
-            .persistent()
-            .set(&types::DataKey::Escrow(nonce), &escrow);
-        env.storage()
-            .persistent()
-            .extend_ttl(&types::DataKey::Escrow(nonce), 100_000, 100_000);
+        env.storage().persistent().set(&types::DataKey::Escrow(nonce), &escrow);
+        env.storage().persistent().extend_ttl(&types::DataKey::Escrow(nonce), 100_000, 100_000);
 
         Ok(nonce)
     }
 
     pub fn claim(env: Env, escrow_id: u64, preimage: BytesN<32>) -> Result<(), EscrowError> {
         let key = types::DataKey::Escrow(escrow_id);
-        let mut escrow: Escrow = env
-            .storage()
-            .persistent()
-            .get(&key)
-            .ok_or(EscrowError::NotFound)?;
+        let mut escrow: Escrow = env.storage().persistent().get(&key).ok_or(EscrowError::NotFound)?;
 
         if escrow.resolved {
             return Err(EscrowError::AlreadyResolved);
         }
 
-        let computed_hash = env.crypto().sha256(&preimage);
-        if computed_hash != escrow.hash_lock {
+        let computed_hash: Hash<32> = env.crypto().sha256(&preimage.clone().into());
+        let computed_bytesn: BytesN<32> = computed_hash.into();
+
+        if computed_bytesn != escrow.hash_lock {
             return Err(EscrowError::HashMismatch);
         }
 
@@ -91,11 +83,7 @@ impl X402Escrow {
 
     pub fn refund(env: Env, escrow_id: u64) -> Result<(), EscrowError> {
         let key = types::DataKey::Escrow(escrow_id);
-        let mut escrow: Escrow = env
-            .storage()
-            .persistent()
-            .get(&key)
-            .ok_or(EscrowError::NotFound)?;
+        let mut escrow: Escrow = env.storage().persistent().get(&key).ok_or(EscrowError::NotFound)?;
 
         if escrow.resolved {
             return Err(EscrowError::AlreadyResolved);
