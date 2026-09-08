@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
   <h1>voxtrade-contract</h1>
   <p><strong>Sovereign Voice-to-Voice Commerce: Machine-to-Machine x402 Negotiation on Stellar</strong></p>
   <p>
@@ -7,8 +7,8 @@
     <img src="https://img.shields.io/badge/soroban--sdk-20.0.0--rc2-orange.svg" alt="soroban-sdk" />
   </p>
   <p>
-    <a href="https://github.com/voxxtrade/voxtrade-app"><strong>VoxTrade App</strong></a> �
-    <a href="#getting-started"><strong>Getting Started</strong></a> �
+    <a href="https://github.com/voxxtrade/voxtrade-app"><strong>VoxTrade App</strong></a> ·
+    <a href="#getting-started"><strong>Getting Started</strong></a> ·
     <a href="#architecture"><strong>Architecture</strong></a>
   </p>
 </div>
@@ -25,18 +25,18 @@ Giving an AI direct access to a credit card or unrestricted wallet is a massive 
 
 VoxTrade bridges machine-to-machine x402 negotiation to the Stellar network using two purpose-built Soroban smart contracts:
 
-1. **AgentTreasury** � A policy-bounded vault that grants an AI agent restricted spending power. It enforces a strict rolling daily limit. If the AI goes rogue or gets compromised, the maximum loss is mathematically capped.
-2. **X402Escrow** � A trustless Hash Time-Locked Contract (HTLC) designed for x402 exchanges. Funds are locked on-chain and only released when the seller reveals the cryptographic preimage (the receipt/service key). If the seller fails to deliver within the timeout, the funds are refunded to the buyer.
+1. **AgentTreasury** — A policy-bounded vault that grants an AI agent restricted spending power. It enforces a strict rolling daily limit. If the AI goes rogue or gets compromised, the maximum loss is mathematically capped.
+2. **X402Escrow** — A trustless Hash Time-Locked Contract (HTLC) designed for x402 exchanges. Funds are locked on-chain and only released when the seller reveals the cryptographic preimage (the receipt/service key). If the seller fails to deliver within the timeout, the funds are refunded to the buyer.
 
 ## Enforced Invariants & Test Coverage
 
 VoxTrade enforces strict invariants to guarantee safety in autonomous M2M transactions:
 
-- **Strict Daily Quotas** � An agent can never exceed its daily_limit within a 24-hour ledger window (LimitExceeded).
-- **Cryptographic Delivery Verification** � The escrow will only release funds if the provided preimage exactly matches the hash_lock established during negotiation (HashMismatch).
-- **Guaranteed Refunds on Timeout** � If a seller fails to deliver the service preimage before the 	imeout_ledger, the buyer is guaranteed a full refund (TimeoutReached / TimeoutNotReached).
-- **Zero Double-Spending** � An escrow can only be claimed or refunded exactly once. Once esolved, all subsequent interactions are blocked (AlreadyResolved).
-- **Admin Isolation** � Only the administrative address can initialize the treasury or upgrade the configuration. The agent key is strictly sandboxed to spending (Unauthorized).
+- **Strict Daily Quotas** — An agent can never exceed its daily_limit within a 24-hour ledger window (LimitExceeded).
+- **Cryptographic Delivery Verification** — The escrow will only release funds if the provided preimage exactly matches the hash_lock established during negotiation (HashMismatch).
+- **Guaranteed Refunds on Timeout** — If a seller fails to deliver the service preimage before the 	imeout_ledger, the buyer is guaranteed a full refund (TimeoutReached / TimeoutNotReached).
+- **Zero Double-Spending** — An escrow can only be claimed or refunded exactly once. Once esolved, all subsequent interactions are blocked (AlreadyResolved).
+- **Admin Isolation** — Only the administrative address can initialize the treasury or upgrade the configuration. The agent key is strictly sandboxed to spending (Unauthorized).
 
 ## Smart Contract Errors
 
@@ -68,30 +68,55 @@ All operational errors return explicit, stable integer codes.
 
 ## Architecture
 
-VoxTrade operates on a commit-reveal scheme integrated with the x402 protocol:
+This repository adopts a strict separation of concerns, splitting execution across on-chain Soroban contracts and off-chain AI reasoning engines.
 
-`	ext
-   User's AI Agent                  Service Provider (Seller)
-         �                                   �
-         +- 1. Negotiate Price & Terms -----?�
-         �?- 2. Provide Hash Lock (H) -------�
-         �                                   �
-         �  (AgentTreasury validates quota)  �
-         �                                   �
-         +- 3. Lock Funds in X402Escrow ----?�
-         �                                   �
-         �?- 4. Deliver Service + Preimage --�
-         �                                   �
-         +- 5. Escrow.claim(Preimage)        �
-         �  (Seller receives funds)          �
-         ?                                   ?
+1. **Soroban Contracts (Rust)**: Running natively on the Stellar network, these handle the rigid security limits (the 24-hour treasury caps) and the cryptographic escrow locking (HTLCs).
+2. **AI Voice Agent (Python/TS)**: Running off-chain, the agent listens to VoIP audio streams, negotiates terms, and acts as the programmatic signer for the smart contracts.
+
+### Hybrid Sequence Flow
+
+`mermaid
+graph TD
+  Merchant[Merchant Voice] -->|Audio| Agent[Python Voice Agent]
+  Supplier[Supplier Agent] -->|Audio| Agent
+  Agent -->|Agrees on Price| Engine{x402 Execution Engine}
+  Engine -- "Generate Preimage" --> Submit[Submit Tx to Treasury]
+  Submit --> Treasury[Agent Treasury]
+  Treasury -- "Verifies Limit" --> Escrow[x402 Escrow]
+  Escrow -->|Holds Funds| State[(Stellar Ledger)]
+  Supplier -- "Reveals Preimage" --> Escrow
+  Escrow -->|Releases USDC| Supplier
 `
 
-1. The AI Agent negotiates with the seller.
-2. The seller generates a random preimage and sends its SHA-256 hash_lock to the agent.
-3. The agent calls AgentTreasury::execute_x402_lock(), which verifies the daily limit and forwards the funds to X402Escrow, locked under hash_lock.
-4. The seller delivers the service along with the preimage.
-5. The seller (or any party) submits the preimage to the escrow to release the funds. If they fail, the agent can call efund() after the timeout.
+1. **Merchant Onboarding:** The human merchant uses their Freighter wallet to deploy an gent_treasury and authorize the AI's server-side Ed25519 key with a daily limit.
+2. **AI Negotiation:** The merchant's Voice Agent calls the supplier's Agent over VoIP. They negotiate bulk pricing in natural language.
+3. **Programmatic Settlement:** Once agreed, the merchant's AI signs an execute_x402_lock transaction. The treasury verifies the 24-hour limit hasn't been breached and securely locks the USDC in the HTLC x402_escrow.
+4. **Delivery & Claim:** The supplier AI delivers the goods/API payload and claims the escrow by revealing the SHA256 preimage. If it fails, the funds timeout and refund.
+
+## Repository Structure
+
+`	ext
+voxtrade-contract/
+├── contracts/
+│   ├── agent_treasury/           # The merchant-controlled AI allowance vault
+│   │   ├── src/
+│   │   │   ├── lib.rs            # Entrypoint and core logic
+│   │   │   ├── errors.rs         # Treasury error definitions
+│   │   │   ├── types.rs          # Data structures (Config, DailySpend)
+│   │   │   └── test.rs           # Unit tests and bounds checking
+│   │   └── Cargo.toml
+│   └── x402_escrow/              # The trustless HTLC for cross-agent commerce
+│       ├── src/
+│       │   ├── lib.rs            # Entrypoint and commit-reveal logic
+│       │   ├── errors.rs         # Escrow error definitions
+│       │   ├── types.rs          # Escrow state (amount, hash_lock, timeouts)
+│       │   └── test.rs           # Unit tests and timeout simulations
+│       └── Cargo.toml
+├── .github/workflows/ci.yml      # Parallelized CI (Format, Clippy, Test)
+├── Cargo.lock                    # Pinned dependency resolution (V2)
+├── Cargo.toml                    # Workspace configuration
+└── README.md
+`
 
 ## Getting Started
 
