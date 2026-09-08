@@ -1,8 +1,8 @@
 [workspace]
+resolver = "2"
 members = [
     "contracts/*",
 ]
 
 [patch.crates-io]
 ethnum = { path = "ethnum-patch" }
-
