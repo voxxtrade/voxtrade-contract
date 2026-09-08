@@ -1,17 +1,13 @@
 #![no_std]
+use soroban_sdk::{contract, contractimpl, Address, Env, IntoVal, Symbol};
 
-pub mod errors;
-pub mod types;
-
+mod errors;
 #[cfg(test)]
 mod test;
+mod types;
 
-use crate::errors::TreasuryError;
-use crate::types::DataKey;
-use soroban_sdk::{contract, contractimpl, vec, Address, BytesN, Env, Symbol};
-
-const TTL_EXTEND: u32 = 535680;
-const SECONDS_IN_DAY: u64 = 86400;
+use errors::TreasuryError;
+use types::{Config, DailySpend};
 
 #[contract]
 pub struct AgentTreasury;
@@ -24,37 +20,19 @@ impl AgentTreasury {
         agent_key: Address,
         daily_limit: i128,
     ) -> Result<(), TreasuryError> {
-        if env.storage().instance().has(&DataKey::Admin) {
+        admin.require_auth();
+        if env.storage().instance().has(&Symbol::new(&env, "admin")) {
             return Err(TreasuryError::AlreadyInitialized);
         }
-        env.storage().instance().set(&DataKey::Admin, &admin);
-        env.storage().instance().set(&DataKey::AgentKey, &agent_key);
+        let config = Config {
+            admin,
+            agent_key,
+            daily_limit,
+        };
         env.storage()
             .instance()
-            .set(&DataKey::DailyLimit, &daily_limit);
-        env.storage().instance().set(&DataKey::SpentToday, &0_i128);
-        env.storage()
-            .instance()
-            .set(&DataKey::LastReset, &env.ledger().timestamp());
-
-        env.storage().instance().extend_ttl(TTL_EXTEND, TTL_EXTEND);
-        Ok(())
-    }
-
-    pub fn update_limit(env: Env, admin: Address, new_limit: i128) -> Result<(), TreasuryError> {
-        admin.require_auth();
-        let stored_admin: Address = env.storage().instance().get(&DataKey::Admin).unwrap();
-        if admin != stored_admin {
-            return Err(TreasuryError::Unauthorized);
-        }
-
-        env.storage()
-            .instance()
-            .set(&DataKey::DailyLimit, &new_limit);
-        env.storage().instance().extend_ttl(TTL_EXTEND, TTL_EXTEND);
-
-        env.events()
-            .publish((Symbol::new(&env, "LimitUpdated"),), new_limit);
+            .set(&Symbol::new(&env, "config"), &config);
+        env.storage().instance().extend_ttl(100_000, 100_000);
         Ok(())
     }
 
@@ -62,61 +40,64 @@ impl AgentTreasury {
         env: Env,
         agent: Address,
         token: Address,
-        escrow_contract: Address,
+        escrow: Address,
         seller: Address,
         amount: i128,
-        hash_lock: BytesN<32>,
+        hash_lock: soroban_sdk::BytesN<32>,
         timeout_ledger: u32,
     ) -> Result<(), TreasuryError> {
         agent.require_auth();
-        let stored_agent: Address = env.storage().instance().get(&DataKey::AgentKey).unwrap();
-        if agent != stored_agent {
+        let config: Config = env
+            .storage()
+            .instance()
+            .get(&Symbol::new(&env, "config"))
+            .unwrap();
+        if agent != config.agent_key {
             return Err(TreasuryError::Unauthorized);
         }
 
-        env.storage().instance().extend_ttl(TTL_EXTEND, TTL_EXTEND);
+        let current_ledger = env.ledger().sequence();
+        let current_day = current_ledger / 17280;
 
-        if amount <= 0 {
-            return Err(TreasuryError::InvalidAmount);
-        }
-
-        let mut spent_today: i128 = env.storage().instance().get(&DataKey::SpentToday).unwrap();
-        let mut last_reset: u64 = env.storage().instance().get(&DataKey::LastReset).unwrap();
-        let current_time = env.ledger().timestamp();
-
-        if current_time > last_reset + SECONDS_IN_DAY {
-            spent_today = 0;
-            last_reset = current_time;
+        let spend_key = Symbol::new(&env, "daily_spend");
+        let mut daily_spend: DailySpend =
             env.storage()
-                .instance()
-                .set(&DataKey::LastReset, &last_reset);
+                .persistent()
+                .get(&spend_key)
+                .unwrap_or(DailySpend {
+                    day: current_day,
+                    amount_spent: 0,
+                });
+
+        if daily_spend.day != current_day {
+            daily_spend.day = current_day;
+            daily_spend.amount_spent = 0;
         }
 
-        let daily_limit: i128 = env.storage().instance().get(&DataKey::DailyLimit).unwrap();
-        if spent_today + amount > daily_limit {
+        if daily_spend.amount_spent + amount > config.daily_limit {
             return Err(TreasuryError::LimitExceeded);
         }
 
-        spent_today += amount;
+        daily_spend.amount_spent += amount;
+        env.storage().persistent().set(&spend_key, &daily_spend);
         env.storage()
-            .instance()
-            .set(&DataKey::SpentToday, &spent_today);
+            .persistent()
+            .extend_ttl(&spend_key, 100_000, 100_000);
 
-        let args = vec![
-            &env,
-            env.current_contract_address().into_val(&env),
-            seller.into_val(&env),
-            token.into_val(&env),
-            amount.into_val(&env),
-            hash_lock.into_val(&env),
-            timeout_ledger.into_val(&env),
-        ];
+        env.invoke_contract::<()>(
+            &escrow,
+            &Symbol::new(&env, "lock_funds"),
+            (
+                env.current_contract_address().into_val(&env),
+                seller.into_val(&env),
+                token.into_val(&env),
+                amount.into_val(&env),
+                hash_lock.into_val(&env),
+                timeout_ledger.into_val(&env),
+            )
+                .into_val(&env),
+        );
 
-        let _escrow_id: u64 =
-            env.invoke_contract(&escrow_contract, &Symbol::new(&env, "lock_funds"), args);
-
-        env.events()
-            .publish((Symbol::new(&env, "AgentSpend"),), (amount, token, seller));
         Ok(())
     }
 }

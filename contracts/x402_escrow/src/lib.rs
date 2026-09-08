@@ -1,16 +1,15 @@
 #![no_std]
+use soroban_sdk::{
+    contract, contractimpl, crypto::Hash, token, Address, Bytes, BytesN, Env, IntoVal, Symbol,
+};
 
-pub mod errors;
-pub mod types;
-
+mod errors;
 #[cfg(test)]
 mod test;
+mod types;
 
-use crate::errors::EscrowError;
-use crate::types::{DataKey, Escrow};
-use soroban_sdk::{contract, contractimpl, crypto::Hash, token, Address, BytesN, Env, Symbol};
-
-const TTL_EXTEND: u32 = 535680;
+use errors::EscrowError;
+use types::Escrow;
 
 #[contract]
 pub struct X402Escrow;
@@ -25,96 +24,90 @@ impl X402Escrow {
         amount: i128,
         hash_lock: BytesN<32>,
         timeout_ledger: u32,
-    ) -> u64 {
+    ) -> Result<u64, EscrowError> {
         buyer.require_auth();
 
-        env.storage().instance().extend_ttl(TTL_EXTEND, TTL_EXTEND);
-
-        if timeout_ledger <= env.ledger().sequence() {
-            panic!("timeout already reached");
+        if amount <= 0 {
+            return Err(EscrowError::InvalidAmount);
         }
-
-        let nonce: u64 = env.storage().instance().get(&DataKey::Nonce).unwrap_or(0);
-        let next_nonce = nonce + 1;
-        env.storage().instance().set(&DataKey::Nonce, &next_nonce);
+        if timeout_ledger <= env.ledger().sequence() {
+            return Err(EscrowError::InvalidTimeout);
+        }
 
         token::Client::new(&env, &token).transfer(&buyer, &env.current_contract_address(), &amount);
 
+        let nonce_key = Symbol::new(&env, "nonce");
+        let mut nonce: u64 = env.storage().instance().get(&nonce_key).unwrap_or(0);
+        nonce += 1;
+        env.storage().instance().set(&nonce_key, &nonce);
+
         let escrow = Escrow {
-            buyer: buyer.clone(),
-            seller: seller.clone(),
-            amount,
+            buyer,
+            seller,
             token,
+            amount,
             hash_lock,
             timeout_ledger,
             resolved: false,
         };
 
-        let key = DataKey::Escrow(next_nonce);
-        env.storage().persistent().set(&key, &escrow);
         env.storage()
             .persistent()
-            .extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
+            .set(&types::DataKey::Escrow(nonce), &escrow);
+        env.storage()
+            .persistent()
+            .extend_ttl(&types::DataKey::Escrow(nonce), 100_000, 100_000);
 
-        env.events().publish(
-            (Symbol::new(&env, "FundsLocked"),),
-            (next_nonce, buyer, seller, amount),
-        );
-        next_nonce
+        Ok(nonce)
     }
 
     pub fn claim(env: Env, escrow_id: u64, preimage: BytesN<32>) -> Result<(), EscrowError> {
-        let key = DataKey::Escrow(escrow_id);
-        let mut escrow: Escrow = env.storage().persistent().get(&key).unwrap();
+        let key = types::DataKey::Escrow(escrow_id);
+        let mut escrow: Escrow = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .ok_or(EscrowError::NotFound)?;
 
         if escrow.resolved {
             return Err(EscrowError::AlreadyResolved);
         }
 
-        if env.ledger().sequence() > escrow.timeout_ledger {
-            return Err(EscrowError::TimeoutReached);
-        }
+        let computed_hash: Hash<32> = env.crypto().sha256(&preimage.clone().into());
+        let computed_bytesn: BytesN<32> = computed_hash.into();
 
-        let computed_hash = env.crypto().sha256(&preimage);
-        if computed_hash != escrow.hash_lock {
-            return Err(EscrowError::InvalidHash);
+        if computed_bytesn != escrow.hash_lock {
+            return Err(EscrowError::HashMismatch);
         }
 
         escrow.resolved = true;
         env.storage().persistent().set(&key, &escrow);
-        env.storage()
-            .persistent()
-            .extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
 
         token::Client::new(&env, &escrow.token).transfer(
             &env.current_contract_address(),
             &escrow.seller,
             &escrow.amount,
         );
-        env.events().publish(
-            (Symbol::new(&env, "FundsClaimed"),),
-            (escrow_id, escrow.seller),
-        );
         Ok(())
     }
 
     pub fn refund(env: Env, escrow_id: u64) -> Result<(), EscrowError> {
-        let key = DataKey::Escrow(escrow_id);
-        let mut escrow: Escrow = env.storage().persistent().get(&key).unwrap();
+        let key = types::DataKey::Escrow(escrow_id);
+        let mut escrow: Escrow = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .ok_or(EscrowError::NotFound)?;
 
         if escrow.resolved {
             return Err(EscrowError::AlreadyResolved);
         }
-
-        if env.ledger().sequence() <= escrow.timeout_ledger {
+        if env.ledger().sequence() < escrow.timeout_ledger {
             return Err(EscrowError::TimeoutNotReached);
         }
 
         escrow.resolved = true;
         env.storage().persistent().set(&key, &escrow);
-        env.storage()
-            .persistent()
-            .extend_ttl(&key, TTL_EXTEND, TTL_EXTEND);
 
         token::Client::new(&env, &escrow.token).transfer(
             &env.current_contract_address(),

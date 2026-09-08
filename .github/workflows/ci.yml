@@ -16,13 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.76.0
           target: wasm32-unknown-unknown
           components: rustfmt
-      - name: Fix Dependencies
-        run: cargo generate-lockfile && cargo update -p zeroize --precise 1.8.1
       - name: Check Formatting
         run: cargo fmt --all -- --check
 
@@ -32,13 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.76.0
           target: wasm32-unknown-unknown
           components: clippy
-      - name: Fix Dependencies
-        run: cargo generate-lockfile && cargo update -p zeroize --precise 1.8.1
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
@@ -48,12 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.76.0
           target: wasm32-unknown-unknown
-      - name: Fix Dependencies
-        run: cargo generate-lockfile && cargo update -p zeroize --precise 1.8.1
       - name: Build Contracts
         run: cargo build --target wasm32-unknown-unknown --release
       - name: Run Tests
