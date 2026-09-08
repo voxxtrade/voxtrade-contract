@@ -7,5 +7,6 @@ pub enum TreasuryError {
     AlreadyInitialized = 1,
     LimitExceeded = 2,
     InvalidAmount = 3,
+    Unauthorized = 4,
 }
 
