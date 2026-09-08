@@ -88,13 +88,14 @@ impl AgentTreasury {
             &escrow,
             &Symbol::new(&env, "lock_funds"),
             (
-                env.current_contract_address(),
-                seller,
-                token,
-                amount,
-                hash_lock,
-                timeout_ledger,
-            ),
+                env.current_contract_address().into_val(&env),
+                seller.into_val(&env),
+                token.into_val(&env),
+                amount.into_val(&env),
+                hash_lock.into_val(&env),
+                timeout_ledger.into_val(&env),
+            )
+                .into_val(&env),
         );
 
         Ok(())

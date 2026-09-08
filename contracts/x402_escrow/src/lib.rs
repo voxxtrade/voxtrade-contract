@@ -73,8 +73,10 @@ impl X402Escrow {
             return Err(EscrowError::AlreadyResolved);
         }
 
-        let computed_hash = env.crypto().sha256(&preimage);
-        if computed_hash != escrow.hash_lock {
+        let computed_hash: Hash<32> = env.crypto().sha256(&preimage.clone().into());
+        let computed_bytesn: BytesN<32> = computed_hash.into();
+
+        if computed_bytesn != escrow.hash_lock {
             return Err(EscrowError::HashMismatch);
         }
 
