@@ -8,4 +8,7 @@ pub enum EscrowError {
     AlreadyResolved = 2,
     TimeoutNotReached = 3,
     TimeoutReached = 4,
+    HashMismatch = 5,
+    NotFound = 6,
+    InvalidTimeout = 7,
 }

@@ -3,14 +3,16 @@ name = "agent_treasury"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-
 [dependencies]
-
-
-soroban-sdk = "20.0.0-rc2"
-soroban-token-sdk = "20.0.0-rc2"
+soroban-sdk = "20.0.0"
+arbitrary = "=1.3.2"
 
 [dev-dependencies]
-soroban-sdk = { version = "20.0.0-rc2", features = ["testutils"] }
+soroban-sdk = { version = "20.0.0", features = ["testutils"] }
+agent_treasury = { path = ".", features = ["testutils"] }
+
+[features]
+testutils = ["soroban-sdk/testutils"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
