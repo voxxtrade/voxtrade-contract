@@ -16,9 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.76.0
           target: wasm32-unknown-unknown
           components: rustfmt
       - name: Check Formatting
@@ -30,9 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.76.0
           target: wasm32-unknown-unknown
           components: clippy
       - name: Run Clippy
@@ -44,9 +42,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.76.0
           target: wasm32-unknown-unknown
       - name: Build Contracts
         run: cargo build --target wasm32-unknown-unknown --release
