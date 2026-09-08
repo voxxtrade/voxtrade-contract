@@ -11,4 +11,5 @@ pub enum EscrowError {
     HashMismatch = 5,
     NotFound = 6,
     InvalidTimeout = 7,
+    InvalidAmount = 8,
 }

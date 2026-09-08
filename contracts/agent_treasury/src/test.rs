@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Ledger, testutils::Address as _, Address, BytesN, Env};
+use soroban_sdk::{testutils::Address as _, testutils::Ledger, Address, BytesN, Env};
 
 // We mock the escrow contract to test cross-contract calls
 #[contract]
@@ -71,4 +71,3 @@ fn test_rolling_limit() {
         &agent, &token, &escrow_id, &seller, &50_i128, &hash_lock, &timeout,
     );
 }
-

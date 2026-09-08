@@ -8,4 +8,5 @@ pub enum TreasuryError {
     InsufficientBalance = 2,
     InvalidAmount = 3,
     NotFound = 4,
+    LimitExceeded = 5,
 }
