@@ -1,0 +1,5 @@
+stellar-sdk>=9.0.0
+fastapi
+pydantic
+openai
+

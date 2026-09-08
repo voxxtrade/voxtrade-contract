@@ -1,0 +1,8 @@
+target/
+.env
+.soroban/
+node_modules/
+*.log
+agent/__pycache__/
+agent/.pytest_cache/
+
