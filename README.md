@@ -97,22 +97,33 @@ graph TD
 
 ```text
 voxtrade-contract/
+├── agent/                        # Autonomous AI Voice Agent Runtime (Python)
+│   ├── x402_signer.py            # Ed25519 signer & Soroban tx constructor
+│   ├── x402_server.py            # FastAPI HTTP 402 challenge & streaming server
+│   ├── negotiation_engine.py     # State machine for voice negotiation & quota guards
+│   ├── test_agent.py             # Agent runtime unit test suite
+│   └── requirements.txt          # Python dependencies
+├── docs/
+│   └── RFC_X402_SPECIFICATION.md # Standard specification for x402 Voice Commerce
+├── scripts/
+│   ├── deploy.sh                 # Linux/macOS deployment script
+│   └── deploy.ps1                # Windows/PowerShell deployment script
 ├── contracts/
 │   ├── agent_treasury/           # The merchant-controlled AI allowance vault
 │   │   ├── src/
-│   │   │   ├── lib.rs            # Entrypoint and core logic
+│   │   │   ├── lib.rs            # Entrypoint, governance & allowance logic
 │   │   │   ├── errors.rs         # Treasury error definitions
 │   │   │   ├── types.rs          # Data structures (Config, DailySpend)
 │   │   │   └── test.rs           # Unit tests and bounds checking
 │   │   └── Cargo.toml
 │   └── x402_escrow/              # The trustless HTLC for cross-agent commerce
 │       ├── src/
-│       │   ├── lib.rs            # Entrypoint and commit-reveal logic
+│       │   ├── lib.rs            # Entrypoint, HTLC & cooperative cancellation
 │       │   ├── errors.rs         # Escrow error definitions
 │       │   ├── types.rs          # Escrow state (amount, hash_lock, timeouts)
 │       │   └── test.rs           # Unit tests and timeout simulations
 │       └── Cargo.toml
-├── .github/workflows/ci.yml      # Parallelized CI (Format, Clippy, Test)
+├── .github/workflows/ci.yml      # Parallelized CI (Format, Clippy, Rust & Python Tests)
 ├── Cargo.lock                    # Pinned dependency resolution (V2)
 ├── Cargo.toml                    # Workspace configuration
 └── README.md
@@ -122,20 +133,24 @@ voxtrade-contract/
 
 ### Prerequisites
 
-Ensure you have the Rust toolchain and the Soroban CLI installed:
+Ensure you have the Rust toolchain, Python 3.10+, and the Soroban CLI installed:
 
 ```bash
 rustup target add wasm32-unknown-unknown
 cargo install --locked soroban-cli
+pip install -r agent/requirements.txt
 ```
 
 ### Build and Test
 
 ```bash
-# Run all unit tests
+# Run all smart contract unit tests (24 tests)
 cargo test
 
-# Build WASM artifacts for deployment
+# Run Python voice agent unit tests (11 tests)
+python -m unittest agent/test_agent.py
+
+# Build release WASM artifacts for deployment
 cargo build --target wasm32-unknown-unknown --release
 ```
 

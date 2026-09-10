@@ -49,3 +49,19 @@ jobs:
         run: cargo build --target wasm32-unknown-unknown --release
       - name: Run Tests
         run: cargo test
+
+  agent-test:
+    name: Voice Agent Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install stellar-sdk
+      - name: Run Agent Tests
+        run: python -m unittest agent/test_agent.py
