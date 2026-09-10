@@ -45,11 +45,11 @@ impl X402Escrow {
             .set(&types::DataKey::Nonce, &nonce);
 
         let escrow = Escrow {
-            buyer,
-            seller,
+            buyer: buyer.clone(),
+            seller: seller.clone(),
             token,
             amount,
-            hash_lock,
+            hash_lock: hash_lock.clone(),
             timeout_ledger,
             resolved: false,
         };
@@ -60,6 +60,11 @@ impl X402Escrow {
         env.storage()
             .persistent()
             .extend_ttl(&types::DataKey::Escrow(nonce), 100_000, 100_000);
+
+        env.events().publish(
+            (soroban_sdk::Symbol::new(&env, "escrow"), soroban_sdk::Symbol::new(&env, "lock_funds")),
+            (nonce, buyer, seller, amount, hash_lock, timeout_ledger),
+        );
 
         Ok(nonce)
     }
@@ -96,6 +101,11 @@ impl X402Escrow {
             &escrow.amount,
         );
 
+        env.events().publish(
+            (soroban_sdk::Symbol::new(&env, "escrow"), soroban_sdk::Symbol::new(&env, "claim")),
+            (escrow_id, escrow.seller, escrow.amount, preimage),
+        );
+
         Ok(())
     }
 
@@ -124,6 +134,48 @@ impl X402Escrow {
             &escrow.amount,
         );
 
+        env.events().publish(
+            (soroban_sdk::Symbol::new(&env, "escrow"), soroban_sdk::Symbol::new(&env, "refund")),
+            (escrow_id, escrow.buyer, escrow.amount),
+        );
+
         Ok(())
+    }
+
+    pub fn cancel_cooperative(env: Env, escrow_id: u64) -> Result<(), EscrowError> {
+        let key = types::DataKey::Escrow(escrow_id);
+        let mut escrow: Escrow = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .ok_or(EscrowError::NotFound)?;
+
+        if escrow.resolved {
+            return Err(EscrowError::AlreadyResolved);
+        }
+
+        // Seller authorization is required to cooperatively forfeit and refund buyer
+        escrow.seller.require_auth();
+
+        escrow.resolved = true;
+        env.storage().persistent().set(&key, &escrow);
+
+        token::Client::new(&env, &escrow.token).transfer(
+            &env.current_contract_address(),
+            &escrow.buyer,
+            &escrow.amount,
+        );
+
+        env.events().publish(
+            (soroban_sdk::Symbol::new(&env, "escrow"), soroban_sdk::Symbol::new(&env, "cancel")),
+            (escrow_id, escrow.buyer, escrow.seller, escrow.amount),
+        );
+
+        Ok(())
+    }
+
+    pub fn get_escrow(env: Env, escrow_id: u64) -> Result<Escrow, EscrowError> {
+        let key = types::DataKey::Escrow(escrow_id);
+        env.storage().persistent().get(&key).ok_or(EscrowError::NotFound)
     }
 }
