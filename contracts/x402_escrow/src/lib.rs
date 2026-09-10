@@ -62,7 +62,10 @@ impl X402Escrow {
             .extend_ttl(&types::DataKey::Escrow(nonce), 100_000, 100_000);
 
         env.events().publish(
-            (soroban_sdk::Symbol::new(&env, "escrow"), soroban_sdk::Symbol::new(&env, "lock_funds")),
+            (
+                soroban_sdk::Symbol::new(&env, "escrow"),
+                soroban_sdk::Symbol::new(&env, "lock_funds"),
+            ),
             (nonce, buyer, seller, amount, hash_lock, timeout_ledger),
         );
 
@@ -102,7 +105,10 @@ impl X402Escrow {
         );
 
         env.events().publish(
-            (soroban_sdk::Symbol::new(&env, "escrow"), soroban_sdk::Symbol::new(&env, "claim")),
+            (
+                soroban_sdk::Symbol::new(&env, "escrow"),
+                soroban_sdk::Symbol::new(&env, "claim"),
+            ),
             (escrow_id, escrow.seller, escrow.amount, preimage),
         );
 
@@ -135,7 +141,10 @@ impl X402Escrow {
         );
 
         env.events().publish(
-            (soroban_sdk::Symbol::new(&env, "escrow"), soroban_sdk::Symbol::new(&env, "refund")),
+            (
+                soroban_sdk::Symbol::new(&env, "escrow"),
+                soroban_sdk::Symbol::new(&env, "refund"),
+            ),
             (escrow_id, escrow.buyer, escrow.amount),
         );
 
@@ -167,7 +176,10 @@ impl X402Escrow {
         );
 
         env.events().publish(
-            (soroban_sdk::Symbol::new(&env, "escrow"), soroban_sdk::Symbol::new(&env, "cancel")),
+            (
+                soroban_sdk::Symbol::new(&env, "escrow"),
+                soroban_sdk::Symbol::new(&env, "cancel"),
+            ),
             (escrow_id, escrow.buyer, escrow.seller, escrow.amount),
         );
 
@@ -176,6 +188,9 @@ impl X402Escrow {
 
     pub fn get_escrow(env: Env, escrow_id: u64) -> Result<Escrow, EscrowError> {
         let key = types::DataKey::Escrow(escrow_id);
-        env.storage().persistent().get(&key).ok_or(EscrowError::NotFound)
+        env.storage()
+            .persistent()
+            .get(&key)
+            .ok_or(EscrowError::NotFound)
     }
 }

@@ -90,7 +90,10 @@ fn test_already_initialized() {
     let rogue_admin = Address::generate(&env);
     let rogue_agent = Address::generate(&env);
     let res2 = treasury.try_init(&rogue_admin, &rogue_agent, &9999_i128);
-    assert_eq!(res2.unwrap_err().unwrap(), TreasuryError::AlreadyInitialized);
+    assert_eq!(
+        res2.unwrap_err().unwrap(),
+        TreasuryError::AlreadyInitialized
+    );
 }
 
 #[test]
@@ -115,7 +118,13 @@ fn test_unauthorized_agent() {
 
     // Call from rogue agent -> Must fail with Unauthorized
     let res = treasury.try_execute_x402_lock(
-        &rogue_agent, &token, &escrow_id, &seller, &10_i128, &hash_lock, &timeout,
+        &rogue_agent,
+        &token,
+        &escrow_id,
+        &seller,
+        &10_i128,
+        &hash_lock,
+        &timeout,
     );
     assert_eq!(res.unwrap_err().unwrap(), TreasuryError::Unauthorized);
 }

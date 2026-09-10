@@ -41,11 +41,7 @@ impl AgentTreasury {
         Ok(())
     }
 
-    pub fn update_limit(
-        env: Env,
-        admin: Address,
-        new_limit: i128,
-    ) -> Result<(), TreasuryError> {
+    pub fn update_limit(env: Env, admin: Address, new_limit: i128) -> Result<(), TreasuryError> {
         admin.require_auth();
         if new_limit <= 0 {
             return Err(TreasuryError::InvalidAmount);
@@ -66,7 +62,10 @@ impl AgentTreasury {
         env.storage().instance().extend_ttl(100_000, 100_000);
 
         env.events().publish(
-            (Symbol::new(&env, "treasury"), Symbol::new(&env, "update_limit")),
+            (
+                Symbol::new(&env, "treasury"),
+                Symbol::new(&env, "update_limit"),
+            ),
             (admin, old_limit, new_limit),
         );
         Ok(())
@@ -94,7 +93,10 @@ impl AgentTreasury {
         env.storage().instance().extend_ttl(100_000, 100_000);
 
         env.events().publish(
-            (Symbol::new(&env, "treasury"), Symbol::new(&env, "update_agent_key")),
+            (
+                Symbol::new(&env, "treasury"),
+                Symbol::new(&env, "update_agent_key"),
+            ),
             (admin, old_agent, new_agent_key),
         );
         Ok(())
@@ -144,14 +146,14 @@ impl AgentTreasury {
         let current_ledger = env.ledger().sequence();
         let current_day = current_ledger / 17280;
         let spend_key = Symbol::new(&env, "daily_spend");
-        let daily_spend: DailySpend = env
-            .storage()
-            .persistent()
-            .get(&spend_key)
-            .unwrap_or(DailySpend {
-                day: current_day,
-                amount_spent: 0,
-            });
+        let daily_spend: DailySpend =
+            env.storage()
+                .persistent()
+                .get(&spend_key)
+                .unwrap_or(DailySpend {
+                    day: current_day,
+                    amount_spent: 0,
+                });
 
         if daily_spend.day != current_day {
             DailySpend {
@@ -226,7 +228,10 @@ impl AgentTreasury {
         );
 
         env.events().publish(
-            (Symbol::new(&env, "treasury"), Symbol::new(&env, "x402_lock")),
+            (
+                Symbol::new(&env, "treasury"),
+                Symbol::new(&env, "x402_lock"),
+            ),
             (agent, escrow, seller, amount),
         );
 
