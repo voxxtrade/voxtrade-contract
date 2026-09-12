@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
   <h1>voxtrade-contract</h1>
   <p><strong>Sovereign Voice-to-Voice Commerce: Machine-to-Machine x402 Negotiation on Stellar Soroban</strong></p>
   <p>
@@ -9,6 +9,7 @@
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License" />
   </p>
   <p>
+    <a href="https://voxxtrade.github.io/docs/"><strong>Official Docs Portal</strong></a> &bull;
     <a href="https://github.com/voxxtrade/voxtrade-app"><strong>VoxTrade Web App &amp; SDK</strong></a> &bull;
     <a href="#published-stellar-testnet-contracts"><strong>Published Contracts</strong></a> &bull;
     <a href="#system-architecture"><strong>Architecture</strong></a> &bull;
@@ -21,6 +22,8 @@
 ---
 
 > Part of the **[VoxTrade](https://github.com/voxxtrade)** open source suite. This repository contains the native **Stellar Soroban smart contracts** and **off-chain agent runtime** powering Sovereign Voice-to-Voice Commerce.
+>
+> 📖 **Official Documentation**: Comprehensive guides, architecture diagrams, and Soroban API references are live at **[`https://voxxtrade.github.io/docs/`](https://voxxtrade.github.io/docs/)**.
 >
 > 🌐 **Full-Stack Companion**: For the Next.js 14 web console, Freighter wallet integration, live 3-mode Voice Negotiation Room, and TypeScript SDK, visit **[`voxxtrade/voxtrade-app`](https://github.com/voxxtrade/voxtrade-app)**.
 
