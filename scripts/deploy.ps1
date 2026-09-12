@@ -30,7 +30,7 @@ try {
     Write-Host ">> Agent Treasury Deployed ID: $TreasuryId" -ForegroundColor Green
 } catch {
     Write-Host "Note: Falling back to simulation / testnet default ID if soroban CLI identity is offline." -ForegroundColor Yellow
-    $TreasuryId = "b9a38f712c4d9e018274ac4839201f84b9c1d0ef93847291a0c8b74619372ef4"
+    $TreasuryId = "CCBZLHEHRUBAHGB72ZZLNHBT4RURGTW2SSSQC4DJDDILVDG4VR55FEJL"
 }
 
 Write-Host "[2/3] Deploying x402 Escrow Contract..." -ForegroundColor Green
@@ -40,8 +40,8 @@ try {
     $EscrowId = Invoke-Expression $EscrowCmd
     Write-Host ">> x402 Escrow Deployed ID: $EscrowId" -ForegroundColor Green
 } catch {
-    Write-Host "Note: Falling back to simulation / testnet default ID if soroban CLI identity is offline." -ForegroundColor Yellow
-    $EscrowId = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+    Write-Host "Note: Falling back to published Stellar Testnet contract ID if soroban CLI identity is offline." -ForegroundColor Yellow
+    $EscrowId = "CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE"
 }
 
 Write-Host "[3/3] Generating Environment Configuration..." -ForegroundColor Green
@@ -49,8 +49,10 @@ $EnvContent = @"
 # VoxTrade Auto-Generated Deployment Addresses ($Network)
 NEXT_PUBLIC_STELLAR_NETWORK=$Network
 NEXT_PUBLIC_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
-NEXT_PUBLIC_TREASURY_WASM_HASH=$TreasuryId
+NEXT_PUBLIC_TREASURY_CONTRACT_ID=$TreasuryId
+NEXT_PUBLIC_TREASURY_WASM_HASH=b9a38f712c4d9e018274ac4839201f84b9c1d0ef93847291a0c8b74619372ef4
 NEXT_PUBLIC_ESCROW_CONTRACT_ID=$EscrowId
+NEXT_PUBLIC_ESCROW_WASM_HASH=c3c9c996894b9f2d01e40562e8eb66195863c0be83b27b3fa99b19e2e666ce8d
 "@
 
 if (Test-Path (Split-Path -Parent $AppEnvFile)) {

@@ -2,6 +2,8 @@ target/
 .env
 .soroban/
 node_modules/
+web/
+temp_xdr/
 *.log
 agent/__pycache__/
 agent/.pytest_cache/
