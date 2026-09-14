@@ -1,26 +1,77 @@
-# Contributing to VoxTrade
+# Contributing to VoxTrade Contracts
 
-First off, thank you for considering contributing to VoxTrade! It's people like you that make VoxTrade a reality.
+Thank you for your interest in contributing to **VoxTrade Soroban Smart Contracts**! We welcome community improvements, gas optimizations, and security hardening.
 
-## 1. Where do I go from here?
+---
 
-If you've noticed a bug or have a feature request, make one! It's generally best if you get confirmation of your bug or approval for your feature request this way before starting to code.
+## Code of Conduct
 
-If you'd like to work on an existing issue, browse the open issues. We use labels like good first issue and help wanted to highlight tasks that are ready for pickup.
+All contributors are expected to uphold our [Code of Conduct](CODE_OF_CONDUCT.md). Please treat all community members with respect and professionalism.
 
-## 2. Fork & create a branch
+---
 
-If this is something you think you can fix, then fork VoxTrade and create a branch with a descriptive name.
+## How to Get Started
 
-## 3. Get the test suite running
+1. **Browse Open Issues**: Check [GitHub Issues](https://github.com/voxxtrade/voxtrade-contract/issues) for bug reports, task enhancements, or open discussions.
+2. **Coordinate First**: Comment on the issue you wish to work on to avoid duplicate work and discuss implementation strategies with the maintainers.
+3. **Submit a PR**: Once ready, open a Pull Request adhering to the quality checklist below.
 
-Make sure you have the Rust toolchain, Soroban CLI, and pnpm installed. Run the tests to ensure everything is working locally before you begin.
+---
 
-## 4. Implement your fix or feature
+## Local Development Workflow
 
-At this point, you're ready to make your changes! Feel free to ask for help; everyone is a beginner at first.
+### 1. Prerequisites
 
-## 5. Make a Pull Request
+- **Rust**: `v1.80+` (via `rustup`)
+- **WASM Target**: `rustup target add wasm32-unknown-unknown`
+- **Stellar CLI**: `v21+` (`cargo install --locked stellar-cli --features opt`)
 
-At this point, you should switch back to your master branch and make sure it's up to date with VoxTrade's master branch.
-Then create a Pull Request.
+### 2. Fork & Clone
+
+```bash
+git clone https://github.com/<your-username>/voxtrade-contract.git
+cd voxtrade-contract
+```
+
+### 3. Build & Test
+
+```bash
+# Run all contract unit and integration tests
+cargo test
+
+# Build optimized WASM binaries
+stellar contract build
+```
+
+### 4. Create a Working Branch
+
+```bash
+git checkout -b feat/<short-description>
+# or
+git checkout -b fix/<short-description>
+```
+
+---
+
+## Pre-Flight Quality Checklist
+
+Before submitting your PR, ensure the following commands run cleanly:
+
+```bash
+# 1. Format code
+cargo fmt --check
+
+# 2. Clippy linting
+cargo clippy --all-targets -- -D warnings
+
+# 3. Test suite
+cargo test
+```
+
+---
+
+## Commit & PR Guidelines
+
+- Follow **Conventional Commits**: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`.
+- Reference related issues in your PR description: `Closes #<NUMBER>`.
+- Thoroughly document any gas, storage footprint, or authorization changes in your PR description.
