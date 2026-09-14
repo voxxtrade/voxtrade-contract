@@ -1,8 +1,8 @@
 ---
 name: "🔴 High Complexity Task"
 about: "Core cryptographic invariants, timelock logic, cross-contract calls, or auth policies"
-title: "[High]: "
-labels: ["complexity: high"]
+title: "feat(contract): "
+labels: ["complexity: high", "enhancement", "smart-contract"]
 assignees: ""
 ---
 

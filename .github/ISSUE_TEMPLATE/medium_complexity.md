@@ -1,8 +1,8 @@
 ---
 name: "🟡 Medium Complexity Task"
 about: "Contract helper functions, events, storage optimizations, or new integration tests"
-title: "[Medium]: "
-labels: ["complexity: medium"]
+title: "feat(contract): "
+labels: ["complexity: medium", "enhancement", "smart-contract"]
 assignees: ""
 ---
 

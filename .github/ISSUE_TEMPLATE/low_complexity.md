@@ -1,8 +1,8 @@
 ---
 name: "🟢 Low Complexity Task"
 about: "Contract docstrings, minor refactor, or test assertion additions"
-title: "[Low]: "
-labels: ["complexity: low"]
+title: "feat(contract): "
+labels: ["complexity: low", "good first issue", "smart-contract"]
 assignees: ""
 ---
 
