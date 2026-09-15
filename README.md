@@ -3,12 +3,14 @@
   <p><strong>Sovereign Voice-to-Voice Commerce: Machine-to-Machine x402 Negotiation on Stellar Soroban</strong></p>
   <p>
     <a href="https://github.com/voxxtrade/voxtrade-contract/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/voxxtrade/voxtrade-contract/ci.yml?branch=main" alt="CI Status" /></a>
+    <a href="https://voxtrade-rho.vercel.app"><img src="https://img.shields.io/badge/Production-Live_App-blueviolet?logo=vercel" alt="Live App" /></a>
     <img src="https://img.shields.io/badge/Stellar-Soroban_v20-blue.svg" alt="Soroban SDK" />
     <img src="https://img.shields.io/badge/Network-Testnet_Live-green.svg" alt="Testnet Live" />
     <img src="https://img.shields.io/badge/Rust-2021_Edition-orange.svg" alt="Rust Edition" />
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License" />
   </p>
   <p>
+    <a href="https://voxtrade-rho.vercel.app"><strong>Live Web App</strong></a> &bull;
     <a href="https://voxxtrade.github.io/docs/"><strong>Official Docs Portal</strong></a> &bull;
     <a href="https://github.com/voxxtrade/voxtrade-app"><strong>VoxTrade Web App &amp; SDK</strong></a> &bull;
     <a href="#published-stellar-testnet-contracts"><strong>Published Contracts</strong></a> &bull;
@@ -22,6 +24,8 @@
 ---
 
 > Part of the **[VoxTrade](https://github.com/voxxtrade)** open source suite. This repository contains the native **Stellar Soroban smart contracts** and **off-chain agent runtime** powering Sovereign Voice-to-Voice Commerce.
+>
+> 🚀 **Live Production Deployment**: Test real-time acoustic negotiation and Freighter wallet integration at **[`https://voxtrade-rho.vercel.app`](https://voxtrade-rho.vercel.app)**.
 >
 > 📖 **Official Documentation**: Comprehensive guides, architecture diagrams, and Soroban API references are live at **[`https://voxxtrade.github.io/docs/`](https://voxxtrade.github.io/docs/)**.
 >
@@ -254,7 +258,10 @@ cargo clippy --all-targets --all-features -- -D warnings
 # 3. Run off-chain Python agent runtime tests (11 tests)
 python -m unittest agent/test_agent.py
 
-# 4. Compile release WASM bytecode for deployment
+# 4. Run the FastAPI x402 payment & streaming server (see agent/README.md)
+uvicorn agent.x402_server:app --port 8000
+
+# 5. Compile release WASM bytecode for deployment
 cargo build --target wasm32-unknown-unknown --release
 ```
 

@@ -1,4 +1,4 @@
-﻿# RFC-0402: Sovereign Voice-to-Voice Commerce Protocol (x402) on Stellar
+# RFC-0402: Sovereign Voice-to-Voice Commerce Protocol (x402) on Stellar
 
 **Status**: Standard Track  
 **Authors**: VoxTrade Core Protocol Team  
@@ -59,7 +59,7 @@ When an unauthenticated or unpaid request is received for a monetized resource o
 ```http
 HTTP/1.1 402 Payment Required
 Content-Type: application/json
-WWW-Authenticate: x402 contract_id="CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+WWW-Authenticate: x402 contract_id="CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE",
                        network="testnet",
                        token="USDC",
                        amount="1000000",
@@ -76,7 +76,7 @@ WWW-Authenticate: x402 contract_id="CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RM
     "total_amount": 1000000,
     "currency": "USDC",
     "hash_lock": "3b9a8f712c4d9e018274ac4839201f84b9c1d0ef93847291a0c8b74619372ef4",
-    "escrow_contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+    "escrow_contract": "CDJS3VHPBXVSFIPA6FUBVS3YXKUGZ75GQ7TQFVPMHBX3KHMREGGNMLFE",
     "timeout_ledgers": 120
   }
 }
