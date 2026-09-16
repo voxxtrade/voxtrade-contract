@@ -72,33 +72,33 @@ VoxTrade bridges machine-to-machine x402 negotiation to the Stellar network usin
 The overall VoxTrade ecosystem is organized as a modular, full-stack architecture:
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph Human["Merchant Control Layer"]
-        Merchant[Human Merchant<br/>Freighter Wallet]
+        Merchant["Human Merchant (Freighter Wallet)"]
     end
 
     subgraph AppRepo["voxtrade-app (Frontend & SDK)"]
-        WebUI[Next.js 14 Web Console<br/>Voice Negotiation Room]
-        SDK[@voxtrade/sdk<br/>TypeScript Contract & Audio Engine]
+        WebUI["Next.js 14 Web Console (Voice Room)"]
+        SDK["@voxtrade/sdk (TypeScript Engine)"]
     end
 
     subgraph ContractRepo["voxtrade-contract (Smart Contracts & Agent)"]
-        AgentRuntime[Python Agent Runtime<br/>x402 Server & Signer]
-        TreasuryContract[AgentTreasury Contract<br/>24H Rolling Quota Vault]
-        EscrowContract[X402Escrow Contract<br/>Trustless HTLC Engine]
+        AgentRuntime["Python Agent Runtime (x402 Server & Signer)"]
+        TreasuryContract["AgentTreasury Contract (24H Quota Vault)"]
+        EscrowContract["X402Escrow Contract (Trustless HTLC Engine)"]
     end
 
     subgraph StellarLedger["Stellar Network (Soroban)"]
-        Stellar[(Stellar Testnet Ledger<br/>Sub-second Finality &bull; 0.00001 XLM Gas)]
+        Stellar[("Stellar Testnet Ledger (Sub-second Finality)")]
     end
 
-    Merchant -->|Connect & Set Allowance| WebUI
-    WebUI -->|Soroban RPC| SDK
-    SDK -->|Admin Transactions| TreasuryContract
-    AgentRuntime -->|execute_x402_lock| TreasuryContract
-    TreasuryContract -->|Enforce 24H Bound| EscrowContract
-    EscrowContract -->|Settle / Claim / Refund| Stellar
-    WebUI -->|Voice Stream & AI Contract Drafter| AgentRuntime
+    Merchant -->|"Connect & Set Allowance"| WebUI
+    WebUI -->|"Soroban RPC"| SDK
+    SDK -->|"Admin Transactions"| TreasuryContract
+    AgentRuntime -->|"execute_x402_lock"| TreasuryContract
+    TreasuryContract -->|"Enforce 24H Bound"| EscrowContract
+    EscrowContract -->|"Settle / Claim / Refund"| Stellar
+    WebUI -->|"Voice Stream & AI Contract Drafter"| AgentRuntime
 ```
 
 ---

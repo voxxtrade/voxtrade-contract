@@ -43,7 +43,7 @@ sequenceDiagram
     Escrow-->>Treasury: Returns Escrow ID
     BuyerAgent->>SellerServer: GET /stream/audio/chunk_1<br/>(Authorization: x402 escrow_id=...)
     Note over SellerServer: Verify Escrow Locked on Stellar
-    SellerServer-->>BuyerAgent: HTTP 200 OK + Audio Data<br/>(X-Preimage: <secret_preimage>)
+    SellerServer-->>BuyerAgent: HTTP 200 OK + Audio Data<br/>(X-Preimage: secret_preimage)
     SellerServer->>Escrow: claim(escrow_id, preimage)
     Escrow->>SellerServer: Transfer USDC Payout
 ```

@@ -18,17 +18,17 @@ VoxTrade resolves this by implementing a **tripartite tiered authorization model
 ## 2. Tripartite Authorization Tiers
 
 ```mermaid
-graph TD
-    Human[Tier 1: Human Merchant<br/>Freighter Wallet / Root Admin] -->|Deploy & Fund| Treasury[AgentTreasury Contract]
-    Human -->|Set Rolling 24H Limit| Treasury
-    Human -->|Withdraw Capital| Treasury
+flowchart TD
+    Human["Tier 1: Human Merchant (Freighter Wallet / Root Admin)"] -->|"Deploy & Fund"| Treasury["AgentTreasury Contract"]
+    Human -->|"Set Rolling 24H Limit"| Treasury
+    Human -->|"Withdraw Capital"| Treasury
     
-    Agent[Tier 2: Voice AI Agent<br/>Off-Chain Ed25519 Key] -->|execute_x402_lock| Treasury
+    Agent["Tier 2: Voice AI Agent (Off-Chain Ed25519 Key)"] -->|"execute_x402_lock"| Treasury
     
-    Treasury -->|Enforce 24H Bound| Escrow[X402Escrow Contract]
+    Treasury -->|"Enforce 24H Bound"| Escrow["X402Escrow Contract"]
     
-    Supplier[Tier 3: Supplier / Counterparty<br/>Preimage Holder] -->|claim with Preimage| Escrow
-    Supplier -->|cancel_cooperative| Escrow
+    Supplier["Tier 3: Supplier / Counterparty (Preimage Holder)"] -->|"claim with Preimage"| Escrow
+    Supplier -->|"cancel_cooperative"| Escrow
 ```
 
 ### Tier 1: Human Merchant (Master Administrator)
