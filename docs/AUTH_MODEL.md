@@ -81,7 +81,7 @@ $$\text{Epoch Day} = \left\lfloor \frac{\text{Ledger Sequence}}{17280} \right\rf
 | Attack Vector | Vector Description | Protocol Mitigation |
 |---|---|---|
 | **Compromised Agent Key** | An attacker extracts the AI's server-side Ed25519 signing key. | Maximum loss is strictly capped at the 24-hour limit. Attacker cannot withdraw funds to an external wallet; funds can only be sent into `X402Escrow` with valid hash locks. The human merchant can rotate the compromised key instantly via `update_agent_key`. |
-| **Prompt Injection / Hallucination** | Malicious audio prompts trick the buyer AI into agreeing to exorbitant pricing ($1,000/sec). | Off-chain heuristic engine rejects quotes $> 0.10 \text{ USDC/chunk}$. On-chain treasury halts execution the instant the daily limit is reached. |
+| **Prompt Injection / Hallucination** | Malicious audio prompts trick the buyer AI into agreeing to exorbitant pricing ($1,000/sec). | Off-chain heuristic engine rejects quotes `> 0.10 USDC/chunk`. On-chain treasury halts execution the instant the daily limit is reached. |
 | **Seller Stalling / Non-Delivery** | Seller accepts escrow lock but never streams the audio chunks or discloses the preimage. | All escrows require a `timeout_ledger`. Once the deadline passes, the buyer calls `X402Escrow::refund` to retrieve 100% of the locked assets. |
 | **Double Spending / Replay** | Seller attempts to claim the same escrow twice using the revealed preimage. | The `resolved: bool` flag is set to `true` atomically within the first claim. Subsequent claims reject with `EscrowError::AlreadyResolved` (Code 2). |
 

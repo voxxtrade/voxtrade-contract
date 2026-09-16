@@ -146,8 +146,8 @@ sequenceDiagram
 
 VoxTrade smart contracts enforce mathematical invariants across all execution paths:
 
-- **Deterministic Rolling 24H Quotas**: Quota windows are computed deterministically via $\lfloor \text{ledger\_sequence} / 17280 \rfloor \approx 24\text{ hours}$. No off-chain crons required (`LimitExceeded`).
-- **Cryptographic Delivery Verification**: Escrow funds can only be claimed if the submitted preimage matches $\text{SHA256}(P) == \text{hash\_lock}$ (`HashMismatch`).
+- **Deterministic Rolling 24H Quotas**: Quota windows are computed deterministically via `ledger_sequence / 17280` (~24 hours / 17,280 ledgers). No off-chain crons required (`LimitExceeded`).
+- **Cryptographic Delivery Verification**: Escrow funds can only be claimed if the submitted preimage satisfies `SHA256(preimage) == hash_lock` (`HashMismatch`).
 - **Guaranteed Timeout Refunds**: If a service provider fails to deliver before the timeout ledger, 100% of escrowed capital can be refunded (`TimeoutReached` / `TimeoutNotReached`).
 - **Cooperative Cancellation**: Sellers can forfeit an active escrow early to immediately release funds back to the buyer without waiting for the timeout (`cancel_cooperative`).
 - **Zero Double-Spending**: Escrows transition to terminal `resolved = true` status atomically upon claim or refund (`AlreadyResolved`).
