@@ -396,7 +396,8 @@ fn test_event_init() {
             Symbol::new(&env, "init").into_val(&env),
         ]
     );
-    let payload: (Address, Address, i128) = soroban_sdk::TryFromVal::try_from_val(&env, &event.2).unwrap();
+    let payload: (Address, Address, i128) =
+        soroban_sdk::TryFromVal::try_from_val(&env, &event.2).unwrap();
     assert_eq!(payload, (admin, agent, 100_i128));
 }
 
@@ -534,4 +535,3 @@ fn test_event_x402_lock() {
         soroban_sdk::TryFromVal::try_from_val(&env, &event.2).unwrap();
     assert_eq!(payload, (agent, escrow_id, seller, 60_i128));
 }
-

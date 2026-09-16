@@ -75,3 +75,5 @@ cargo test
 - Follow **Conventional Commits**: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`.
 - Reference related issues in your PR description: `Closes #<NUMBER>`.
 - Thoroughly document any gas, storage footprint, or authorization changes in your PR description.
+- Document any new or modified contract entrypoints in `docs/CONTRACT_REFERENCE.md`.
+
