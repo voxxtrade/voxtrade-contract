@@ -2,7 +2,10 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, testutils::Ledger, Address, BytesN, Env};
+use soroban_sdk::{
+    testutils::{Address as _, Events, Ledger},
+    vec, Address, BytesN, Env, IntoVal, Symbol,
+};
 
 // We mock the escrow contract to test cross-contract calls
 #[contract]
@@ -367,3 +370,168 @@ fn test_getters() {
     assert_eq!(daily_spend.amount_spent, 0);
     assert_eq!(daily_spend.day, 0);
 }
+
+#[test]
+fn test_event_init() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let agent = Address::generate(&env);
+
+    let treasury_id = env.register_contract(None, AgentTreasury);
+    let treasury = AgentTreasuryClient::new(&env, &treasury_id);
+
+    treasury.init(&admin, &agent, &100_i128);
+
+    let events = env.events().all();
+    assert_eq!(events.len(), 1);
+    let event = events.last().unwrap();
+    assert_eq!(event.0, treasury_id);
+    assert_eq!(
+        event.1,
+        vec![
+            &env,
+            Symbol::new(&env, "treasury").into_val(&env),
+            Symbol::new(&env, "init").into_val(&env),
+        ]
+    );
+    let payload: (Address, Address, i128) = soroban_sdk::TryFromVal::try_from_val(&env, &event.2).unwrap();
+    assert_eq!(payload, (admin, agent, 100_i128));
+}
+
+#[test]
+fn test_event_update_limit() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let agent = Address::generate(&env);
+
+    let treasury_id = env.register_contract(None, AgentTreasury);
+    let treasury = AgentTreasuryClient::new(&env, &treasury_id);
+
+    treasury.init(&admin, &agent, &100_i128);
+    treasury.update_limit(&admin, &250_i128);
+
+    let events = env.events().all();
+    assert_eq!(events.len(), 2);
+    let event = events.last().unwrap();
+    assert_eq!(event.0, treasury_id);
+    assert_eq!(
+        event.1,
+        vec![
+            &env,
+            Symbol::new(&env, "treasury").into_val(&env),
+            Symbol::new(&env, "update_limit").into_val(&env),
+        ]
+    );
+    let payload: (Address, i128, i128) =
+        soroban_sdk::TryFromVal::try_from_val(&env, &event.2).unwrap();
+    assert_eq!(payload, (admin, 100_i128, 250_i128));
+}
+
+#[test]
+fn test_event_update_agent_key() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let agent1 = Address::generate(&env);
+    let agent2 = Address::generate(&env);
+
+    let treasury_id = env.register_contract(None, AgentTreasury);
+    let treasury = AgentTreasuryClient::new(&env, &treasury_id);
+
+    treasury.init(&admin, &agent1, &100_i128);
+    treasury.update_agent_key(&admin, &agent2);
+
+    let events = env.events().all();
+    assert_eq!(events.len(), 2);
+    let event = events.last().unwrap();
+    assert_eq!(event.0, treasury_id);
+    assert_eq!(
+        event.1,
+        vec![
+            &env,
+            Symbol::new(&env, "treasury").into_val(&env),
+            Symbol::new(&env, "update_agent_key").into_val(&env),
+        ]
+    );
+    let payload: (Address, Address, Address) =
+        soroban_sdk::TryFromVal::try_from_val(&env, &event.2).unwrap();
+    assert_eq!(payload, (admin, agent1, agent2));
+}
+
+#[test]
+fn test_event_withdraw() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let agent = Address::generate(&env);
+    let recipient = Address::generate(&env);
+    let token = env.register_contract(None, MockToken);
+
+    let treasury_id = env.register_contract(None, AgentTreasury);
+    let treasury = AgentTreasuryClient::new(&env, &treasury_id);
+
+    treasury.init(&admin, &agent, &100_i128);
+    treasury.withdraw(&admin, &token, &recipient, &45_i128);
+
+    let events = env.events().all();
+    // init is event 0, withdraw is event 1
+    let event = events.last().unwrap();
+    assert_eq!(event.0, treasury_id);
+    assert_eq!(
+        event.1,
+        vec![
+            &env,
+            Symbol::new(&env, "treasury").into_val(&env),
+            Symbol::new(&env, "withdraw").into_val(&env),
+        ]
+    );
+    let payload: (Address, Address, Address, i128) =
+        soroban_sdk::TryFromVal::try_from_val(&env, &event.2).unwrap();
+    assert_eq!(payload, (admin, recipient, token, 45_i128));
+}
+
+#[test]
+fn test_event_x402_lock() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let agent = Address::generate(&env);
+    let token = Address::generate(&env);
+    let seller = Address::generate(&env);
+
+    let treasury_id = env.register_contract(None, AgentTreasury);
+    let treasury = AgentTreasuryClient::new(&env, &treasury_id);
+    let escrow_id = env.register_contract(None, MockEscrow);
+
+    treasury.init(&admin, &agent, &100_i128);
+
+    let hash_lock = BytesN::from_array(&env, &[7; 32]);
+    let timeout = 5000;
+
+    treasury.execute_x402_lock(
+        &agent, &token, &escrow_id, &seller, &60_i128, &hash_lock, &timeout,
+    );
+
+    let events = env.events().all();
+    let event = events.last().unwrap();
+    assert_eq!(event.0, treasury_id);
+    assert_eq!(
+        event.1,
+        vec![
+            &env,
+            Symbol::new(&env, "treasury").into_val(&env),
+            Symbol::new(&env, "x402_lock").into_val(&env),
+        ]
+    );
+    let payload: (Address, Address, Address, i128) =
+        soroban_sdk::TryFromVal::try_from_val(&env, &event.2).unwrap();
+    assert_eq!(payload, (agent, escrow_id, seller, 60_i128));
+}
+
