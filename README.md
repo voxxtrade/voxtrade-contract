@@ -14,6 +14,8 @@
     <a href="https://voxxtrade.github.io/docs/"><strong>Official Docs Portal</strong></a> &bull;
     <a href="https://github.com/voxxtrade/voxtrade-app"><strong>VoxTrade Web App &amp; SDK</strong></a> &bull;
     <a href="#published-stellar-testnet-contracts"><strong>Published Contracts</strong></a> &bull;
+    <a href="#architectural-rationale-why-exactly-two-smart-contracts"><strong>Why 2 Contracts?</strong></a> &bull;
+    <a href="#stellar-ecosystem-integration"><strong>Stellar Integration</strong></a> &bull;
     <a href="#system-architecture"><strong>Architecture</strong></a> &bull;
     <a href="#acoustic-negotiation--voice-flow"><strong>Voice Flow</strong></a> &bull;
     <a href="docs/CONTRACT_REFERENCE.md"><strong>API Reference</strong></a> &bull;
@@ -64,6 +66,42 @@ VoxTrade bridges machine-to-machine x402 negotiation to the Stellar network usin
 
 1. **`AgentTreasury`** &mdash; A policy-bounded smart account vault that grants an AI agent strictly restricted spending power. It mathematically enforces a rolling 24-hour limit. If the AI is compromised or manipulated, the maximum loss is mathematically capped. The human merchant retains master key authority to adjust allowances, rotate keys, or withdraw funds.
 2. **`X402Escrow`** &mdash; A trustless Hash Time-Locked Contract (HTLC) tailored for the x402 streaming protocol. Funds are locked on-chain and only released when the seller discloses the cryptographic preimage (the receipt/service key). If the seller fails to deliver before the timeout ledger, the funds are automatically refunded to the buyer.
+
+---
+
+## Architectural Rationale: Why Exactly Two Smart Contracts?
+
+A foundational architectural decision in VoxTrade is relying on **exactly two smart contracts** rather than a bloated monolithic contract or an overly fragmented multi-contract array:
+
+1. **Separation of Concerns: Policy Vault vs. Market Settlement**:
+   - **`AgentTreasury` is an Account Abstraction Vault**: It represents the *merchant or buyer identity*. Its sole responsibility is custodial risk management: enforcing the rolling 24-hour spending ceiling, managing agent key delegation, allowing admin withdrawals, and isolating risk.
+   - **`X402Escrow` is an Atomic Market Settlement Engine**: It is completely agnostic to who the merchant or agent is. Its sole responsibility is cryptographic Hash Time-Locked Contracts (HTLCs): holding locked collateral until a matching SHA-256 preimage is revealed or refunding upon timeout.
+   - **Security Isolation**: If escrow settlement and treasury custody were combined into a single contract, a vulnerability in market negotiation or dispute resolution could expose a merchant's entire deposited balance. By decoupling them, an adversarial seller or malfunctioning service can never touch the treasury; they can only claim funds explicitly transferred into escrow.
+
+2. **Multi-Tenant Settlement vs. Dedicated Merchant Vaults**:
+   - **`X402Escrow` is a Shared Multi-Tenant Primitive**: A single deployed instance of `X402Escrow` can service thousands of concurrent buyers, sellers, and voice sessions across the entire Stellar ecosystem without cross-contamination.
+   - **`AgentTreasury` is an Independent Merchant Instance**: Each merchant deploys their own instance of `AgentTreasury` configured with their specific keypair, authorized counterparties, and daily budget limits.
+
+3. **Zero Redundancy with Native Stellar Primitives**:
+   - **No Custom Token Contract**: VoxTrade does not deploy custom token contracts. Instead, it integrates directly with Stellar's native **Stellar Asset Contract (SAC)** and SEP-0041 standard (supporting USDC, XLM, EURC).
+   - **No Custom Orderbook or AMM Contract**: Stellar already possesses native on-chain DEX orderbooks and path payments. Rebuilding token ledgers or exchange contracts on Soroban would add gas overhead, split liquidity, and introduce unnecessary risk.
+   - **No On-Chain Audio Bloat**: Audio streaming (24kHz/48kHz Opus frames) occurs peer-to-peer off-chain. Only financial state proofs (32-byte SHA-256 hashlocks and preimages) touch Soroban storage, keeping contract execution instantaneous and state rent minimal.
+
+---
+
+## Stellar Ecosystem Integration
+
+VoxTrade is purpose-built to leverage the unique performance, security, and financial infrastructure of the Stellar and Soroban network:
+
+| Stellar Ecosystem Component | VoxTrade Integration & Role |
+| :--- | :--- |
+| **Soroban Smart Contracts (Rust SDK v20+)** | Powers the core on-chain logic (`AgentTreasury` & `X402Escrow`). Native host cryptographic intrinsics (`env.crypto().sha256()`) verify preimages on bare-metal hardware with sub-second execution. |
+| **Stellar Asset Contract (SAC / SEP-0041)** | Native token settlement for enterprise stablecoins (e.g. Testnet USDC `CCW6...MI75`) and native Lumens (XLM). Contracts interact via the standard `token::Client` interface. |
+| **Deterministic Ledger Sequence Epochs** | Enforces rolling 24-hour quotas via `ledger_sequence / 17280` without requiring external oracle networks, centralized keepers, or off-chain cron jobs. |
+| **Sub-Second Finality & Micro-Cent Gas** | Stellar's ~5-second ledger settlement and < 0.00001 XLM fees make continuous micropayments for 2-second audio chunks economically viable, unlike Ethereum or Layer-2 rollups. |
+| **Freighter Wallet (SEP-0007 Integration)** | Provides non-custodial root administrative control for human merchants to deploy vaults, rotate keys, and adjust spending limits directly from the browser. |
+| **Soroban RPC & TypeScript SDK (`@stellar/stellar-sdk`)** | Full end-to-end off-chain pipeline: transaction simulation, footprint generation, envelope signing, and asynchronous status polling. |
+| **HTTP 402 Web Standard Alignment** | Bridges standard web architecture (IETF HTTP `402 Payment Required`) to Stellar smart contracts, creating a native on-chain payment rail for voice AI agents. |
 
 ---
 
