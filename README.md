@@ -333,6 +333,18 @@ To run the complete VoxTrade application:
 
 ---
 
+## Contributors
+
+Thanks to all the incredible people who contribute to VoxTrade!
+
+<a href="https://github.com/voxxtrade/voxtrade-contract/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=voxxtrade/voxtrade-contract" alt="VoxTrade Contract Contributors" />
+</a>
+
+Contributions of any kind are welcome! Please check out our [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+
+---
+
 ## License
 
 This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
